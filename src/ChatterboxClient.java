@@ -199,7 +199,7 @@ public class ChatterboxClient {
         OutputStream outputStream = socket.getOutputStream();
         OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, java.nio.charset.StandardCharsets.UTF_8);
         this.serverWriter = new BufferedWriter(outputStreamWriter);
-        
+
         // Make sure to have this.serverReader and this.serverWriter set by the end of this method!
         // hint: get the streams from the sockets, use those to create the InputStreamReader/OutputStreamWriter and the BufferedReader/BufferedWriter
     }
@@ -249,6 +249,7 @@ public class ChatterboxClient {
         } else if (response.startsWith("Welcome")) { // starts w/ welcome = auth success
             // print the welcome line to userOutput 
             userOutput.write((response + "\n").getBytes(StandardCharsets.UTF_8));
+            return;
         } else {
             throw new IllegalArgumentException(response);
         }
@@ -267,7 +268,8 @@ public class ChatterboxClient {
      * @throws IOException
      */
     public void streamChat() throws IOException {
-        throw new UnsupportedOperationException("Chat streaming not yet implemented. Implement streamChat() and remove this exception!");
+        Thread incomingThread = new Thread(() -> printIncomingChats());
+        incomingThread.start();   
     }
 
     /**
@@ -287,6 +289,27 @@ public class ChatterboxClient {
     public void printIncomingChats() {
         // Listen on serverReader
         // Write to userOutput, NOT System.out
+
+        // loop
+        try {
+            String line;
+            while ((line = serverReader.readLine()) != null) { // through each line from serverReader
+                // write that line to userOutput
+                userOutput.write((line + "\n").getBytes(StandardCharsets.UTF_8));
+            }
+            // if null, server is disconnected
+            userOutput.write(("Server disconnected.\n").getBytes(StandardCharsets.UTF_8));
+            // exit program
+            System.exit(1);
+        } catch (IOException e) {
+            // treat as disconnect
+            try {
+                // print a message to userOutput
+                userOutput.write(("Lost connection to server: " + e.getMessage() + "\n").getBytes(StandardCharsets.UTF_8));
+                // and exit
+                System.exit(1);
+            } catch (IOException i) {}
+        }
     }
 
     /**
