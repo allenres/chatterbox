@@ -131,13 +131,17 @@ public class ChatterboxClient {
      */
     public static ChatterboxOptions parseArgs(String[] args) throws IllegalArgumentException {
         // TODO: read args in the required order and return new ChatterboxOptions(host, port, username, password)
+        // handle bad argument count
         if (args.length != 4) {
             throw new IllegalArgumentException("There must be exactly 4 arguments. Please try again.");
         } 
 
+        // parse port from string to int
         int port = Integer.parseInt(args[1]);
+        // initialize options variable
         ChatterboxOptions options;
 
+        // validate port range
         if (port >= 1 && port <= 65535) {
             options = new ChatterboxOptions(args[0], port, args[2], args[3]);
         } else {
@@ -184,15 +188,18 @@ public class ChatterboxClient {
      * @throws IOException if the socket cannot be opened
      */
     public void connect() throws IOException {
-        try (Socket socket = new Socket(getHost(), getPort())) {
-            InputStream inputStream = socket.getInputStream();
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream, java.nio.charset.StandardCharsets.UTF_8);
-            this.serverReader = new BufferedReader(inputStreamReader);
+        // create a socket to host:port
+        Socket socket = new Socket(host, port);
+    
+        // populate serverReader and serverWriter from the socket
+        InputStream inputStream = socket.getInputStream();
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStream, java.nio.charset.StandardCharsets.UTF_8);
+        this.serverReader = new BufferedReader(inputStreamReader);
 
-            OutputStream outputStream = socket.getOutputStream();
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, java.nio.charset.StandardCharsets.UTF_8);
-            this.serverWriter = new BufferedWriter(outputStreamWriter);
-        }
+        OutputStream outputStream = socket.getOutputStream();
+        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, java.nio.charset.StandardCharsets.UTF_8);
+        this.serverWriter = new BufferedWriter(outputStreamWriter);
+        
         // Make sure to have this.serverReader and this.serverWriter set by the end of this method!
         // hint: get the streams from the sockets, use those to create the InputStreamReader/OutputStreamWriter and the BufferedReader/BufferedWriter
     }
@@ -218,9 +225,33 @@ public class ChatterboxClient {
      * @throws IllegalArgumentException for bad credentials / server rejection
      */
     public void authenticate() throws IOException, IllegalArgumentException {
-        throw new UnsupportedOperationException("Authenticate not yet implemented. Implement authenticate() and remove this exception!");
         // Hint: use the username/password instance variables, DO NOT READ FROM userInput
+        // read the server's initial prompt line
+        String prompt = serverReader.readLine();
+        // display the server's prompt line (if any)
+        if (prompt != null) {
+            userOutput.write((prompt + "\n").getBytes(StandardCharsets.UTF_8));
+        }
+
+        // initialize credentials string
+        String credentials = username + " " + password + "\n";
         // send messages using serverWriter (don't forget to flush!)
+        // send credentials to server using serverWriter
+        serverWriter.write(credentials);
+        serverWriter.flush();
+
+        // read one response line from serverReader
+        String response = serverReader.readLine();
+
+        // handle the response
+        if (response == null) {
+            throw new IllegalArgumentException("Server closed the connection after failed authentication.");
+        } else if (response.startsWith("Welcome")) { // starts w/ welcome = auth success
+            // print the welcome line to userOutput 
+            userOutput.write((response + "\n").getBytes(StandardCharsets.UTF_8));
+        } else {
+            throw new IllegalArgumentException(response);
+        }
     }
 
     /**
