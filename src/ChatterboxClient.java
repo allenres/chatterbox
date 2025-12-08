@@ -3,7 +3,11 @@ import java.io.BufferedWriter;
 import java.io.CharArrayReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
@@ -160,7 +164,10 @@ public class ChatterboxClient {
         this.userOutput = userOutput;
 
         // TODO: copy options.getHost(), getPort(), getUsername(), getPassword() into fields
-        options = new ChatterboxOptions(options.getHost(), options.getPort(), options.getUsername(), options.getPassword());
+        this.host = options.getHost();
+        this.port = options.getPort();
+        this.username = options.getUsername();
+        this.password = options.getPassword();
     }
 
     /**
@@ -177,8 +184,15 @@ public class ChatterboxClient {
      * @throws IOException if the socket cannot be opened
      */
     public void connect() throws IOException {
-        throw new UnsupportedOperationException("Connect not yet implemented. Implement connect() and remove this exception!");
+        // try (Socket socket = new Socket(getHost(), getPort())) {
+        //     InputStream inputStream = socket.getInputStream();
+        //     InputStreamReader inputStreamReader = new InputStreamReader(inputStream, java.nio.charset.StandardCharsets.UTF_8);
+        //     this.serverReader = new BufferedReader(inputStreamReader);
 
+        //     OutputStream outputStream = socket.getOutputStream();
+        //     OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, java.nio.charset.StandardCharsets.UTF_8);
+        //     this.serverWriter = new BufferedWriter(outputStreamWriter);
+        // }
         // Make sure to have this.serverReader and this.serverWriter set by the end of this method!
         // hint: get the streams from the sockets, use those to create the InputStreamReader/OutputStreamWriter and the BufferedReader/BufferedWriter
     }
